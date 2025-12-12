@@ -1,0 +1,1735 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>Crown Range – Hay Logger v3.1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="manifest" href="manifest.json" />
+    <meta name="theme-color" content="#020617" />
+
+    <script>
+      if ("serviceWorker" in navigator) {
+        window.addEventListener("load", () => {
+          navigator.serviceWorker.register("service-worker.js");
+        });
+      }
+    </script>
+
+    <style>
+    <style>
+      * {
+        box-sizing: border-box;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, "SF Pro Text",
+          "Segoe UI", sans-serif;
+      }
+
+      :root {
+        --bg: #020617;
+        --card-bg: rgba(15, 23, 42, 0.86);
+        --card-border: rgba(148, 163, 184, 0.18);
+        --muted: rgba(148, 163, 184, 0.85);
+        --text: #e5e7eb;
+
+        --accent: #3b82f6;
+        --accent-2: #60a5fa;
+        --accent-soft: rgba(59, 130, 246, 0.14);
+
+        --danger: #f97316;
+        --danger-soft: rgba(249, 115, 22, 0.18);
+
+        --shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+        --radius: 18px;
+
+        --field-bg: rgba(2, 6, 23, 0.55);
+        --field-border: rgba(148, 163, 184, 0.22);
+        --field-border-focus: rgba(96, 165, 250, 0.55);
+      }
+
+      body {
+        margin: 0;
+        background: radial-gradient(
+            1200px 520px at 20% -10%,
+            rgba(59, 130, 246, 0.22),
+            transparent 70%
+          ),
+          radial-gradient(
+            900px 460px at 85% 10%,
+            rgba(96, 165, 250, 0.12),
+            transparent 60%
+          ),
+          linear-gradient(180deg, #020617 0%, #010414 70%, #020617 100%);
+        color: var(--text);
+        min-height: 100vh;
+        padding-bottom: 88px; /* space for bottom tabs */
+      }
+
+      .topbar {
+        position: sticky;
+        top: 0;
+        z-index: 50;
+        padding: 18px 18px 8px;
+        backdrop-filter: blur(14px);
+        background: linear-gradient(
+          180deg,
+          rgba(2, 6, 23, 0.85),
+          rgba(2, 6, 23, 0.45)
+        );
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+      }
+
+      .topbar-row {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+      }
+
+      h1 {
+        font-size: 28px;
+        margin: 0;
+        letter-spacing: -0.02em;
+      }
+
+      .badge {
+        display: inline-flex;
+        gap: 8px;
+        align-items: center;
+        padding: 6px 10px;
+        border-radius: 999px;
+        background: rgba(15, 23, 42, 0.55);
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        color: rgba(229, 231, 235, 0.85);
+        font-size: 13px;
+        margin-top: 8px;
+      }
+      .dot {
+        width: 9px;
+        height: 9px;
+        border-radius: 999px;
+        background: rgba(59, 130, 246, 0.85);
+        box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+      }
+
+      .btn {
+        border: 1px solid rgba(148, 163, 184, 0.22);
+        background: rgba(15, 23, 42, 0.55);
+        color: var(--text);
+        padding: 10px 14px;
+        border-radius: 999px;
+        cursor: pointer;
+        font-weight: 650;
+        transition: transform 0.06s ease, border 0.2s ease, background 0.2s ease;
+      }
+      .btn:hover {
+        border-color: rgba(96, 165, 250, 0.5);
+        background: rgba(15, 23, 42, 0.7);
+      }
+      .btn:active {
+        transform: translateY(1px);
+      }
+
+      .container {
+        max-width: 1120px;
+        margin: 0 auto;
+        padding: 16px 18px 0;
+      }
+
+      .card {
+        background: var(--card-bg);
+        border: 1px solid var(--card-border);
+        box-shadow: var(--shadow);
+        border-radius: var(--radius);
+        padding: 18px;
+      }
+
+      .card-title {
+        font-size: 20px;
+        margin: 0 0 6px;
+        letter-spacing: -0.01em;
+      }
+      .card-sub {
+        margin: 0 0 14px;
+        color: rgba(148, 163, 184, 0.9);
+        font-size: 14px;
+      }
+
+      .grid-2 {
+        display: grid;
+        gap: 14px;
+        grid-template-columns: 1fr 1fr;
+      }
+      @media (max-width: 900px) {
+        .grid-2 {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      .row {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 14px;
+      }
+      @media (max-width: 720px) {
+        .row {
+          grid-template-columns: 1fr;
+        }
+      }
+
+      label {
+        display: block;
+        font-size: 13px;
+        color: rgba(148, 163, 184, 0.9);
+        margin: 0 0 6px;
+      }
+
+      input,
+      select,
+      textarea {
+        width: 100%;
+        padding: 12px 12px;
+        border-radius: 12px;
+        border: 1px solid var(--field-border);
+        background: var(--field-bg);
+        color: var(--text);
+        outline: none;
+      }
+      textarea {
+        min-height: 82px;
+        resize: vertical;
+      }
+      input:focus,
+      select:focus,
+      textarea:focus {
+        border-color: var(--field-border-focus);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.12);
+      }
+
+      .inline {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .pillbar {
+        display: flex;
+        gap: 8px;
+        flex-wrap: wrap;
+        margin: 10px 0 14px;
+      }
+
+      .pill {
+        padding: 8px 12px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(15, 23, 42, 0.45);
+        color: rgba(229, 231, 235, 0.9);
+        cursor: pointer;
+        font-weight: 650;
+        font-size: 13px;
+      }
+      .pill.active {
+        border-color: rgba(96, 165, 250, 0.65);
+        background: rgba(59, 130, 246, 0.14);
+        color: #eaf1ff;
+      }
+
+      .cta-row {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 12px;
+      }
+
+      .btn-primary {
+        border: 1px solid rgba(96, 165, 250, 0.6);
+        background: linear-gradient(
+          180deg,
+          rgba(59, 130, 246, 0.85),
+          rgba(37, 99, 235, 0.9)
+        );
+        color: white;
+        padding: 12px 16px;
+        border-radius: 14px;
+        cursor: pointer;
+        font-weight: 800;
+        width: 100%;
+        transition: transform 0.06s ease, filter 0.2s ease;
+      }
+      .btn-primary:hover {
+        filter: brightness(1.04);
+      }
+      .btn-primary:active {
+        transform: translateY(1px);
+      }
+
+      .btn-warn {
+        border: 1px solid rgba(249, 115, 22, 0.55);
+        background: rgba(249, 115, 22, 0.18);
+        color: #ffd9c2;
+        padding: 12px 14px;
+        border-radius: 14px;
+        cursor: pointer;
+        font-weight: 800;
+        white-space: nowrap;
+      }
+
+      .divider {
+        height: 1px;
+        width: 100%;
+        background: rgba(148, 163, 184, 0.14);
+        margin: 16px 0;
+      }
+
+      .stat-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1.2fr 1fr 1fr 1fr;
+      }
+      @media (max-width: 980px) {
+        .stat-grid {
+          grid-template-columns: 1fr 1fr;
+        }
+      }
+      .stat {
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(2, 6, 23, 0.35);
+      }
+      .stat .k {
+        font-size: 13px;
+        color: rgba(148, 163, 184, 0.9);
+      }
+      .stat .v {
+        font-size: 22px;
+        font-weight: 900;
+        margin-top: 6px;
+        letter-spacing: -0.02em;
+      }
+      .stat .s {
+        font-size: 12px;
+        color: rgba(148, 163, 184, 0.85);
+        margin-top: 4px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        overflow: hidden;
+        border-radius: 14px;
+      }
+      thead th {
+        text-align: left;
+        font-size: 12px;
+        letter-spacing: 0.03em;
+        text-transform: none;
+        color: rgba(148, 163, 184, 0.95);
+        padding: 12px 10px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(2, 6, 23, 0.45);
+      }
+      tbody td {
+        padding: 12px 10px;
+        border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+        font-size: 13px;
+        color: rgba(229, 231, 235, 0.92);
+        vertical-align: top;
+      }
+      tbody tr:hover td {
+        background: rgba(59, 130, 246, 0.06);
+      }
+
+      .tag {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 6px 10px;
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(15, 23, 42, 0.45);
+        font-weight: 750;
+        font-size: 12px;
+        color: rgba(229, 231, 235, 0.92);
+        white-space: nowrap;
+      }
+      .tag.planned {
+        border-color: rgba(96, 165, 250, 0.35);
+        background: rgba(59, 130, 246, 0.12);
+      }
+      .tag.done {
+        border-color: rgba(16, 185, 129, 0.28);
+        background: rgba(16, 185, 129, 0.12);
+      }
+      .tag.unpaid {
+        border-color: rgba(249, 115, 22, 0.35);
+        background: rgba(249, 115, 22, 0.12);
+      }
+
+      .mini {
+        font-size: 12px;
+        color: rgba(148, 163, 184, 0.9);
+      }
+
+      .linkbtn {
+        cursor: pointer;
+        font-weight: 800;
+        color: rgba(96, 165, 250, 0.95);
+        background: transparent;
+        border: none;
+        padding: 0;
+      }
+      .linkbtn:hover {
+        text-decoration: underline;
+      }
+
+      .bottom-tabs {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 60;
+        padding: 10px 12px 16px;
+        background: linear-gradient(
+          180deg,
+          rgba(2, 6, 23, 0),
+          rgba(2, 6, 23, 0.88) 35%,
+          rgba(2, 6, 23, 0.95)
+        );
+        backdrop-filter: blur(14px);
+        border-top: 1px solid rgba(148, 163, 184, 0.12);
+      }
+      .tabs-inner {
+        max-width: 1120px;
+        margin: 0 auto;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 10px;
+      }
+      .tabbtn {
+        border-radius: 999px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(15, 23, 42, 0.5);
+        color: rgba(229, 231, 235, 0.9);
+        padding: 12px 12px;
+        cursor: pointer;
+        font-weight: 900;
+        letter-spacing: -0.01em;
+      }
+      .tabbtn.active {
+        border-color: rgba(96, 165, 250, 0.65);
+        background: rgba(59, 130, 246, 0.14);
+        box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.08);
+      }
+
+      .group-card {
+        padding: 14px;
+        border-radius: 16px;
+        border: 1px solid rgba(148, 163, 184, 0.18);
+        background: rgba(2, 6, 23, 0.35);
+      }
+      .group-grid {
+        display: grid;
+        gap: 12px;
+        grid-template-columns: 1fr 1fr 1fr;
+      }
+      @media (max-width: 980px) {
+        .group-grid {
+          grid-template-columns: 1fr;
+        }
+      }
+      .group-head {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 10px;
+      }
+      .group-name {
+        font-weight: 950;
+        font-size: 15px;
+        letter-spacing: -0.01em;
+      }
+      .group-metrics {
+        margin-top: 10px;
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 8px 12px;
+      }
+      .metric .k {
+        font-size: 12px;
+        color: rgba(148, 163, 184, 0.9);
+      }
+      .metric .v {
+        font-size: 14px;
+        font-weight: 850;
+        margin-top: 2px;
+      }
+
+      .muted {
+        color: rgba(148, 163, 184, 0.9);
+      }
+
+      .hidden {
+        display: none !important;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="topbar">
+      <div class="topbar-row">
+        <div>
+          <h1>Crown Range – Hay Logger</h1>
+          <div class="badge">
+            <span class="dot"></span>
+            <span>Owner demo · Local only</span>
+          </div>
+        </div>
+        <button class="btn" id="exportBtn">Export CSV</button>
+      </div>
+    </div>
+
+    <div class="container">
+      <!-- OVERVIEW -->
+      <section id="overviewView" class="card">
+        <div class="card-title">Overview</div>
+        <p class="card-sub">
+          Owner view with totals, trip group profit, and all logged jobs.
+        </p>
+
+        <div class="pillbar">
+          <button class="pill active" data-filter="all">All</button>
+          <button class="pill" data-filter="today">Today</button>
+          <button class="pill" data-filter="week">This week</button>
+        </div>
+
+        <div class="stat-grid">
+          <div class="stat">
+            <div class="k">Total revenue</div>
+            <div class="v" id="statRevenue">$0.00</div>
+            <div class="s" id="statRevenueSub">From filtered jobs</div>
+          </div>
+          <div class="stat">
+            <div class="k">Total miles</div>
+            <div class="v" id="statMiles">0.0</div>
+            <div class="s">Round-trip or one-way as you log it</div>
+          </div>
+          <div class="stat">
+            <div class="k">Total gas</div>
+            <div class="v" id="statGas">$0.00</div>
+            <div class="s">Based on MPG × $/gal settings</div>
+          </div>
+          <div class="stat">
+            <div class="k">Net profit</div>
+            <div class="v" id="statProfit">$0.00</div>
+            <div class="s">Revenue − gas</div>
+          </div>
+        </div>
+
+        <div class="pillbar" style="margin-top: 12px">
+          <span class="tag planned" id="tagPlanned">0 planned</span>
+          <span class="tag unpaid" id="tagUnpaid">0 unpaid</span>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="card-title" style="font-size: 16px; margin-bottom: 10px">
+          Trip groups (profit view)
+        </div>
+        <div id="groupSummary" class="group-grid"></div>
+
+        <div class="divider"></div>
+
+        <table>
+          <thead>
+            <tr>
+              <th style="width: 110px">Date</th>
+              <th style="width: 110px">Dest.</th>
+              <th style="width: 160px">Customer</th>
+              <th style="width: 160px">Group</th>
+              <th style="width: 70px">Bales</th>
+              <th style="width: 95px">Revenue</th>
+              <th style="width: 70px">Miles</th>
+              <th style="width: 85px">Gas</th>
+              <th style="width: 95px">Profit</th>
+              <th style="width: 90px">Status</th>
+              <th style="width: 70px">Paid</th>
+              <th style="width: 120px">Actions</th>
+            </tr>
+          </thead>
+          <tbody id="jobsTable"></tbody>
+        </table>
+      </section>
+
+      <!-- JOBS -->
+      <section id="jobsView" class="card hidden">
+        <div class="card-title">Jobs / Loads</div>
+        <p class="card-sub">
+          Log hay loads fast. Destination presets auto-fill miles + time (still
+          editable). Trip groups give you profit per run.
+        </p>
+
+        <div class="grid-2">
+          <div>
+            <div class="row">
+              <div>
+                <label>Date</label>
+                <input type="date" id="jobDate" />
+              </div>
+              <div>
+                <label>Destination</label>
+                <select id="jobDest"></select>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top: 12px">
+              <div>
+                <label>Customer</label>
+                <input id="jobCustomer" placeholder="Customer name" />
+              </div>
+              <div>
+                <label>Trip group</label>
+                <select id="jobGroup"></select>
+                <div class="mini" style="margin-top: 8px">
+                  <button class="linkbtn" id="openGroupMgr">
+                    Manage groups
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top: 12px">
+              <div>
+                <label>Pickup / Delivery</label>
+                <select id="jobType">
+                  <option value="pickup">Pickup</option>
+                  <option value="delivery">Delivery</option>
+                </select>
+                <div class="mini" style="margin-top: 6px">
+                  Tip: Selecting a destination other than “Norco” will auto-set
+                  to Delivery.
+                </div>
+              </div>
+              <div>
+                <label>Status</label>
+                <select id="jobStatus">
+                  <option value="planned">Planned</option>
+                  <option value="done">Done</option>
+                </select>
+              </div>
+            </div>
+
+            <div class="row" style="margin-top: 12px">
+              <div>
+                <label>Hay type</label>
+                <select id="jobHay">
+                  <option value="Alfalfa">Alfalfa (bales)</option>
+                  <option value="Bermuda">Bermuda (bales)</option>
+                  <option value="50/50">50/50 (Alfalfa/Bermuda)</option>
+                  <option value="Other">Other</option>
+                </select>
+              </div>
+              <div>
+                <label>Bales</label>
+                <input type="number" id="jobBales" min="0" step="1" value="20" />
+              </div>
+            </div>
+
+            <div class="row" style="margin-top: 12px">
+              <div>
+                <label>Price per bale ($)</label>
+                <input
+                  type="number"
+                  id="jobPricePer"
+                  min="0"
+                  step="0.01"
+                  value="16.00"
+                />
+              </div>
+              <div>
+                <label>Total price (auto)</label>
+                <input id="jobTotal" disabled value="$0.00" />
+              </div>
+            </div>
+
+            <div class="row" style="margin-top: 12px">
+              <div>
+                <label>Miles (auto / edit)</label>
+                <input type="number" id="jobMiles" min="0" step="0.1" value="0" />
+              </div>
+              <div>
+                <label>Time (minutes)</label>
+                <input type="number" id="jobMinutes" min="0" step="1" value="90" />
+              </div>
+            </div>
+
+            <div class="row" style="margin-top: 12px">
+              <div>
+                <label>Paid?</label>
+                <select id="jobPaid">
+                  <option value="no">No</option>
+                  <option value="yes">Yes</option>
+                </select>
+              </div>
+              <div>
+                <label>Gas + Profit (auto)</label>
+                <input id="jobProfitLine" disabled value="Gas $0.00 · Profit $0.00" />
+              </div>
+            </div>
+
+            <div style="margin-top: 12px">
+              <label>Notes</label>
+              <textarea id="jobNotes" placeholder="Cash / Zelle / anything special..."></textarea>
+            </div>
+
+            <div class="cta-row">
+              <button class="btn-primary" id="addJobBtn">Add job</button>
+              <button class="btn-warn" id="clearAllBtn">Clear all</button>
+            </div>
+          </div>
+
+          <div>
+            <div class="card-title" style="font-size: 16px">Settings</div>
+            <p class="card-sub" style="margin-bottom: 10px">
+              Used for gas + profit math and destination auto-fill.
+            </p>
+
+            <div class="group-card">
+              <div class="card-title" style="font-size: 15px; margin-bottom: 8px">
+                Gas settings
+              </div>
+              <div class="row">
+                <div>
+                  <label>Gas price ($/gal)</label>
+                  <input type="number" id="setGasPrice" min="0" step="0.01" />
+                </div>
+                <div>
+                  <label>Truck MPG (avg)</label>
+                  <input type="number" id="setMpg" min="1" step="0.1" />
+                </div>
+              </div>
+              <div class="mini" style="margin-top: 10px">
+                These apply to all jobs. Edit miles per job if a house is farther/closer.
+              </div>
+              <div style="margin-top: 12px">
+                <button class="btn" id="saveSettingsBtn" style="width: 100%">
+                  Save settings
+                </button>
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="group-card">
+              <div class="card-title" style="font-size: 15px; margin-bottom: 8px">
+                Destination presets
+              </div>
+              <div class="mini" style="margin-bottom: 10px">
+                Auto-fills miles + minutes when you pick a destination. Still editable.
+              </div>
+              <div id="destList"></div>
+              <div class="mini" style="margin-top: 10px">
+                Tip: set these as your “typical” drive, then adjust miles per house.
+              </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="group-card" id="groupMgr" style="display: none">
+              <div class="group-head">
+                <div class="group-name">Trip Group Manager</div>
+                <button class="btn" id="closeGroupMgr">Close</button>
+              </div>
+              <div class="row" style="margin-top: 12px">
+                <div>
+                  <label>New group name</label>
+                  <input id="newGroupName" placeholder="Norwalk run / Riverside AM / etc." />
+                </div>
+                <div style="display:flex; align-items:flex-end;">
+                  <button class="btn" id="addGroupBtn" style="width:100%;">Add group</button>
+                </div>
+              </div>
+              <div class="divider"></div>
+              <div id="groupList"></div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="card-title" style="font-size: 16px">Trailer capacity</div>
+            <p class="card-sub">
+              Set your max bale capacity. Planned jobs (today) will fill the bar.
+            </p>
+            <div class="row">
+              <div>
+                <label>Max bales</label>
+                <input type="number" id="maxBales" min="1" step="1" />
+              </div>
+              <div>
+                <label>Planned load (today)</label>
+                <input id="plannedLoad" disabled value="0 / 0" />
+              </div>
+            </div>
+            <div style="margin-top: 12px">
+              <div
+                style="
+                  height: 14px;
+                  background: rgba(148, 163, 184, 0.14);
+                  border-radius: 999px;
+                  overflow: hidden;
+                  border: 1px solid rgba(148, 163, 184, 0.18);
+                "
+              >
+                <div
+                  id="capFill"
+                  style="
+                    height: 100%;
+                    width: 0%;
+                    background: rgba(59, 130, 246, 0.9);
+                    border-radius: 999px;
+                  "
+                ></div>
+              </div>
+              <div class="mini" style="margin-top: 8px" id="capHint">
+                Plan jobs for today to see fill.
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </div>
+
+    <div class="bottom-tabs">
+      <div class="tabs-inner">
+        <button class="tabbtn" id="tabJobs">Jobs</button>
+        <button class="tabbtn active" id="tabOverview">Overview</button>
+      </div>
+    </div>
+
+    <script>
+      /***********************
+       * Local Storage Keys
+       ***********************/
+      const LS_JOBS = "cr_jobs_v31";
+      const LS_SETTINGS = "cr_settings_v31";
+
+      /***********************
+       * Defaults
+       ***********************/
+      const DEFAULT_SETTINGS = {
+        gasPrice: 5.00,
+        mpg: 12.0,
+        maxBales: 120,
+        groups: ["None"],
+        destinations: [
+          { name: "Norco", miles: 0.0, minutes: 0 },
+          { name: "Norwalk", miles: 17.5, minutes: 45 },
+          { name: "Riverside", miles: 12.0, minutes: 30 },
+        ],
+      };
+
+      /***********************
+       * State
+       ***********************/
+      let settings = loadSettings();
+      let jobs = loadJobs();
+      let activeFilter = "all";
+
+      /***********************
+       * Elements
+       ***********************/
+      const overviewView = document.getElementById("overviewView");
+      const jobsView = document.getElementById("jobsView");
+
+      const tabJobs = document.getElementById("tabJobs");
+      const tabOverview = document.getElementById("tabOverview");
+
+      const exportBtn = document.getElementById("exportBtn");
+
+      // Jobs form
+      const jobDate = document.getElementById("jobDate");
+      const jobDest = document.getElementById("jobDest");
+      const jobCustomer = document.getElementById("jobCustomer");
+      const jobGroup = document.getElementById("jobGroup");
+      const jobType = document.getElementById("jobType");
+      const jobHay = document.getElementById("jobHay");
+      const jobBales = document.getElementById("jobBales");
+      const jobPricePer = document.getElementById("jobPricePer");
+      const jobTotal = document.getElementById("jobTotal");
+      const jobMiles = document.getElementById("jobMiles");
+      const jobMinutes = document.getElementById("jobMinutes");
+      const jobStatus = document.getElementById("jobStatus");
+      const jobPaid = document.getElementById("jobPaid");
+      const jobNotes = document.getElementById("jobNotes");
+      const jobProfitLine = document.getElementById("jobProfitLine");
+
+      const addJobBtn = document.getElementById("addJobBtn");
+      const clearAllBtn = document.getElementById("clearAllBtn");
+
+      // Settings
+      const setGasPrice = document.getElementById("setGasPrice");
+      const setMpg = document.getElementById("setMpg");
+      const saveSettingsBtn = document.getElementById("saveSettingsBtn");
+      const maxBales = document.getElementById("maxBales");
+      const plannedLoad = document.getElementById("plannedLoad");
+      const capFill = document.getElementById("capFill");
+      const capHint = document.getElementById("capHint");
+
+      const destList = document.getElementById("destList");
+
+      // Group Manager
+      const openGroupMgr = document.getElementById("openGroupMgr");
+      const closeGroupMgr = document.getElementById("closeGroupMgr");
+      const groupMgr = document.getElementById("groupMgr");
+      const newGroupName = document.getElementById("newGroupName");
+      const addGroupBtn = document.getElementById("addGroupBtn");
+      const groupList = document.getElementById("groupList");
+
+      // Overview
+      const statRevenue = document.getElementById("statRevenue");
+      const statMiles = document.getElementById("statMiles");
+      const statGas = document.getElementById("statGas");
+      const statProfit = document.getElementById("statProfit");
+      const tagPlanned = document.getElementById("tagPlanned");
+      const tagUnpaid = document.getElementById("tagUnpaid");
+      const jobsTable = document.getElementById("jobsTable");
+      const groupSummary = document.getElementById("groupSummary");
+
+      /***********************
+       * Init
+       ***********************/
+      init();
+
+      function init() {
+        // Default date to today
+        jobDate.value = isoDate(new Date());
+
+        // Load settings inputs
+        setGasPrice.value = settings.gasPrice.toFixed(2);
+        setMpg.value = settings.mpg.toFixed(1);
+        maxBales.value = settings.maxBales;
+
+        buildDestDropdown();
+        buildGroupDropdown();
+        buildDestEditor();
+        buildGroupManagerList();
+
+        // Auto-fill on first load
+        applyDestPreset();
+
+        // Navigation
+        tabJobs.addEventListener("click", () => showView("jobs"));
+        tabOverview.addEventListener("click", () => showView("overview"));
+
+        // Form listeners
+        jobDest.addEventListener("change", () => {
+          applyDestPreset();
+          autoPickupDelivery();
+          recomputeJobTotal();
+        });
+        jobBales.addEventListener("input", recomputeJobTotal);
+        jobPricePer.addEventListener("input", recomputeJobTotal);
+        jobMiles.addEventListener("input", recomputeJobTotal);
+        jobMinutes.addEventListener("input", recomputeJobTotal);
+
+        // Status/paid changes affect "unpaid" count in overview
+        jobPaid.addEventListener("change", recomputeJobTotal);
+        jobStatus.addEventListener("change", recomputeJobTotal);
+
+        // Buttons
+        addJobBtn.addEventListener("click", addJob);
+        clearAllBtn.addEventListener("click", clearAllData);
+
+        saveSettingsBtn.addEventListener("click", saveSettingsFromUI);
+
+        // Group manager
+        openGroupMgr.addEventListener("click", () => {
+          groupMgr.style.display = "block";
+          groupMgr.scrollIntoView({ behavior: "smooth", block: "start" });
+        });
+        closeGroupMgr.addEventListener("click", () => {
+          groupMgr.style.display = "none";
+        });
+        addGroupBtn.addEventListener("click", addGroup);
+
+        // Filter pills
+        document.querySelectorAll(".pill").forEach((btn) => {
+          btn.addEventListener("click", () => {
+            document.querySelectorAll(".pill").forEach((b) => b.classList.remove("active"));
+            btn.classList.add("active");
+            activeFilter = btn.dataset.filter;
+            renderAll();
+          });
+        });
+
+        exportBtn.addEventListener("click", exportCSV);
+
+        // Initial computations
+        recomputeJobTotal();
+        renderAll();
+        showView("overview");
+      }
+
+      function showView(view) {
+        if (view === "jobs") {
+          jobsView.classList.remove("hidden");
+          overviewView.classList.add("hidden");
+          tabJobs.classList.add("active");
+          tabOverview.classList.remove("active");
+        } else {
+          overviewView.classList.remove("hidden");
+          jobsView.classList.add("hidden");
+          tabOverview.classList.add("active");
+          tabJobs.classList.remove("active");
+        }
+      }
+
+      /***********************
+       * Destinations
+       ***********************/
+      function buildDestDropdown() {
+        jobDest.innerHTML = "";
+        settings.destinations.forEach((d) => {
+          const opt = document.createElement("option");
+          opt.value = d.name;
+          opt.textContent = d.name;
+          jobDest.appendChild(opt);
+        });
+        // If current selection missing, default to first
+        if (![...jobDest.options].some((o) => o.value === jobDest.value)) {
+          jobDest.value = settings.destinations[0]?.name || "Norco";
+        }
+      }
+
+      function getDestPreset(name) {
+        return settings.destinations.find((d) => d.name === name);
+      }
+
+      function applyDestPreset() {
+        const preset = getDestPreset(jobDest.value);
+        if (!preset) return;
+        // Only override if user hasn't typed something nonzero? We'll always fill on destination change.
+        jobMiles.value = Number(preset.miles || 0);
+        jobMinutes.value = Number(preset.minutes || 0);
+      }
+
+      function autoPickupDelivery() {
+        // per your request: choosing a location other than Norco should default to Delivery
+        const dest = jobDest.value;
+        if (dest && dest.toLowerCase() !== "norco") jobType.value = "delivery";
+        else jobType.value = "pickup";
+      }
+
+      function buildDestEditor() {
+        destList.innerHTML = "";
+        settings.destinations.forEach((d, idx) => {
+          const wrap = document.createElement("div");
+          wrap.className = "row";
+          wrap.style.marginBottom = "10px";
+
+          wrap.innerHTML = `
+            <div>
+              <label>Name</label>
+              <input data-dest-name="${idx}" value="${escapeHtml(d.name)}" />
+            </div>
+            <div>
+              <label>Miles</label>
+              <input type="number" min="0" step="0.1" data-dest-miles="${idx}" value="${Number(d.miles || 0)}" />
+            </div>
+          `;
+
+          const wrap2 = document.createElement("div");
+          wrap2.className = "row";
+          wrap2.style.marginBottom = "14px";
+          wrap2.innerHTML = `
+            <div>
+              <label>Minutes</label>
+              <input type="number" min="0" step="1" data-dest-minutes="${idx}" value="${Number(d.minutes || 0)}" />
+            </div>
+            <div style="display:flex; align-items:flex-end; gap:10px;">
+              <button class="btn" data-dest-save="${idx}" style="width:100%;">Save</button>
+              <button class="btn" data-dest-del="${idx}" style="width:100%;">Delete</button>
+            </div>
+          `;
+
+          destList.appendChild(wrap);
+          destList.appendChild(wrap2);
+
+          wrap2.querySelector(`[data-dest-save="${idx}"]`).addEventListener("click", () =>
+            saveDestRow(idx)
+          );
+          wrap2.querySelector(`[data-dest-del="${idx}"]`).addEventListener("click", () =>
+            deleteDestRow(idx)
+          );
+        });
+
+        // Add new destination
+        const addWrap = document.createElement("div");
+        addWrap.className = "row";
+        addWrap.innerHTML = `
+          <div>
+            <label>New destination</label>
+            <input id="newDestName" placeholder="Add destination name" />
+          </div>
+          <div style="display:flex; align-items:flex-end;">
+            <button class="btn" id="addDestBtn" style="width:100%;">Add destination</button>
+          </div>
+        `;
+        destList.appendChild(addWrap);
+
+        document.getElementById("addDestBtn").addEventListener("click", addDestination);
+      }
+
+      function saveDestRow(idx) {
+        const nameEl = document.querySelector(`[data-dest-name="${idx}"]`);
+        const milesEl = document.querySelector(`[data-dest-miles="${idx}"]`);
+        const minEl = document.querySelector(`[data-dest-minutes="${idx}"]`);
+
+        const newName = (nameEl.value || "").trim();
+        if (!newName) return alert("Destination name cannot be empty.");
+
+        settings.destinations[idx] = {
+          name: newName,
+          miles: Number(milesEl.value || 0),
+          minutes: Number(minEl.value || 0),
+        };
+
+        saveSettings(settings);
+        buildDestDropdown();
+        buildDestEditor();
+        renderAll();
+      }
+
+      function deleteDestRow(idx) {
+        const d = settings.destinations[idx];
+        if (!d) return;
+
+        if (settings.destinations.length <= 1) {
+          return alert("You must keep at least one destination.");
+        }
+
+        if (!confirm(`Delete destination "${d.name}"?`)) return;
+        settings.destinations.splice(idx, 1);
+
+        // If any jobs reference the deleted destination, keep them as-is (string),
+        // but dropdown won't show it; that's okay. You can edit later if needed.
+
+        saveSettings(settings);
+        buildDestDropdown();
+        buildDestEditor();
+        renderAll();
+      }
+
+      function addDestination() {
+        const el = document.getElementById("newDestName");
+        const name = (el.value || "").trim();
+        if (!name) return;
+
+        if (settings.destinations.some((d) => d.name.toLowerCase() === name.toLowerCase())) {
+          return alert("That destination already exists.");
+        }
+
+        settings.destinations.push({ name, miles: 0, minutes: 0 });
+        el.value = "";
+
+        saveSettings(settings);
+        buildDestDropdown();
+        buildDestEditor();
+        renderAll();
+      }
+
+      /***********************
+       * Groups
+       ***********************/
+      function buildGroupDropdown() {
+        jobGroup.innerHTML = "";
+        settings.groups.forEach((g) => {
+          const opt = document.createElement("option");
+          opt.value = g;
+          opt.textContent = g;
+          jobGroup.appendChild(opt);
+        });
+        if (![...jobGroup.options].some((o) => o.value === jobGroup.value)) {
+          jobGroup.value = "None";
+        }
+      }
+
+      function buildGroupManagerList() {
+        groupList.innerHTML = "";
+        settings.groups.forEach((g) => {
+          const row = document.createElement("div");
+          row.className = "inline";
+          row.style.justifyContent = "space-between";
+          row.style.marginBottom = "10px";
+          row.innerHTML = `
+            <div class="tag">${escapeHtml(g)}</div>
+            <button class="btn" data-delgroup="${escapeHtml(g)}">Delete</button>
+          `;
+          const btn = row.querySelector("button");
+          btn.addEventListener("click", () => deleteGroup(g));
+          groupList.appendChild(row);
+        });
+      }
+
+      function addGroup() {
+        const name = (newGroupName.value || "").trim();
+        if (!name) return;
+
+        if (settings.groups.some((g) => g.toLowerCase() === name.toLowerCase())) {
+          return alert("That group already exists.");
+        }
+
+        settings.groups.push(name);
+        newGroupName.value = "";
+
+        saveSettings(settings);
+        buildGroupDropdown();
+        buildGroupManagerList();
+        renderAll();
+      }
+
+      function deleteGroup(name) {
+        if (name === "None") return alert('You cannot delete the "None" group.');
+        if (!confirm(`Delete group "${name}"? Jobs in that group will be moved to "None".`)) return;
+
+        // Move jobs to None
+        jobs = jobs.map((j) => (j.group === name ? { ...j, group: "None" } : j));
+
+        settings.groups = settings.groups.filter((g) => g !== name);
+
+        saveJobs(jobs);
+        saveSettings(settings);
+
+        buildGroupDropdown();
+        buildGroupManagerList();
+        renderAll();
+      }
+
+      /***********************
+       * Calculations
+       ***********************/
+      function recomputeJobTotal() {
+        const bales = Number(jobBales.value || 0);
+        const p = Number(jobPricePer.value || 0);
+        const miles = Number(jobMiles.value || 0);
+
+        const revenue = bales * p;
+        jobTotal.value = formatMoney(revenue);
+
+        const gasCost = calcGasCost(miles);
+        const profit = revenue - gasCost;
+        jobProfitLine.value = `Gas ${formatMoney(gasCost)} · Profit ${formatMoney(profit)}`;
+      }
+
+      function calcGasCost(miles) {
+        const mpg = Number(settings.mpg || 0);
+        const gasPrice = Number(settings.gasPrice || 0);
+        if (mpg <= 0) return 0;
+        return (Number(miles || 0) / mpg) * gasPrice;
+      }
+
+      function calcJobComputed(job) {
+        const revenue = Number(job.total || 0);
+        const miles = Number(job.miles || 0);
+        const gas = calcGasCost(miles);
+        const profit = revenue - gas;
+        return { revenue, gas, profit };
+      }
+
+      /***********************
+       * Add / Delete Jobs
+       ***********************/
+      function addJob() {
+        const date = jobDate.value;
+        const dest = jobDest.value;
+        const customer = (jobCustomer.value || "").trim();
+        const group = jobGroup.value || "None";
+
+        const bales = Number(jobBales.value || 0);
+        const pricePer = Number(jobPricePer.value || 0);
+        const total = bales * pricePer;
+
+        const miles = Number(jobMiles.value || 0);
+        const minutes = Number(jobMinutes.value || 0);
+
+        const type = jobType.value;
+        const status = jobStatus.value;
+        const paid = jobPaid.value;
+        const hay = jobHay.value;
+        const notes = jobNotes.value || "";
+
+        if (!date) return alert("Please select a date.");
+
+        const id = cryptoRandomId();
+        const job = {
+          id,
+          date,
+          dest,
+          customer,
+          group,
+          type,
+          hay,
+          bales,
+          pricePer,
+          total,
+          miles,
+          minutes,
+          status,
+          paid,
+          notes,
+          createdAt: Date.now(),
+        };
+
+        jobs.unshift(job);
+        saveJobs(jobs);
+
+        // Reset minimal fields (keep pricing defaults, etc.)
+        jobCustomer.value = "";
+        jobNotes.value = "";
+        // Keep dest/group/bales/price for speed
+
+        renderAll();
+        showView("overview");
+      }
+
+      function deleteJob(id) {
+        if (!confirm("Delete this job?")) return;
+        jobs = jobs.filter((j) => j.id !== id);
+        saveJobs(jobs);
+        renderAll();
+      }
+
+      function togglePaid(id) {
+        jobs = jobs.map((j) =>
+          j.id === id ? { ...j, paid: j.paid === "yes" ? "no" : "yes" } : j
+        );
+        saveJobs(jobs);
+        renderAll();
+      }
+
+      function toggleStatus(id) {
+        jobs = jobs.map((j) =>
+          j.id === id ? { ...j, status: j.status === "done" ? "planned" : "done" } : j
+        );
+        saveJobs(jobs);
+        renderAll();
+      }
+
+      /***********************
+       * Settings Save
+       ***********************/
+      function saveSettingsFromUI() {
+        settings.gasPrice = Number(setGasPrice.value || 0);
+        settings.mpg = Number(setMpg.value || 0);
+        settings.maxBales = Number(maxBales.value || DEFAULT_SETTINGS.maxBales);
+
+        saveSettings(settings);
+        renderAll();
+        recomputeJobTotal();
+        alert("Saved.");
+      }
+
+      /***********************
+       * Render Overview
+       ***********************/
+      function renderAll() {
+        renderOverview();
+        renderCapacity();
+      }
+
+      function renderOverview() {
+        const filtered = filterJobs(jobs, activeFilter);
+
+        // Totals
+        let revenueSum = 0;
+        let milesSum = 0;
+        let gasSum = 0;
+        let profitSum = 0;
+
+        let plannedCount = 0;
+        let unpaidCount = 0;
+
+        filtered.forEach((j) => {
+          const c = calcJobComputed(j);
+          revenueSum += c.revenue;
+          milesSum += Number(j.miles || 0);
+          gasSum += c.gas;
+          profitSum += c.profit;
+
+          if (j.status === "planned") plannedCount++;
+          if (j.paid !== "yes") unpaidCount++;
+        });
+
+        statRevenue.textContent = formatMoney(revenueSum);
+        statMiles.textContent = milesSum.toFixed(1);
+        statGas.textContent = formatMoney(gasSum);
+        statProfit.textContent = formatMoney(profitSum);
+
+        tagPlanned.textContent = `${plannedCount} planned`;
+        tagUnpaid.textContent = `${unpaidCount} unpaid`;
+
+        // Table
+        jobsTable.innerHTML = "";
+        if (filtered.length === 0) {
+          const tr = document.createElement("tr");
+          tr.innerHTML = `<td colspan="12" class="muted">No jobs yet for this filter.</td>`;
+          jobsTable.appendChild(tr);
+        } else {
+          filtered.forEach((j) => {
+            const c = calcJobComputed(j);
+            const tr = document.createElement("tr");
+
+            const statusTag =
+              j.status === "done"
+                ? `<span class="tag done">Done</span>`
+                : `<span class="tag planned">Planned</span>`;
+
+            const paidTag =
+              j.paid === "yes"
+                ? `<span class="tag done">Yes</span>`
+                : `<span class="tag unpaid">No</span>`;
+
+            tr.innerHTML = `
+              <td>${escapeHtml(j.date)}</td>
+              <td>${escapeHtml(j.dest)}</td>
+              <td>${escapeHtml(j.customer || "—")}</td>
+              <td>${escapeHtml(j.group || "None")}</td>
+              <td>${Number(j.bales || 0)}</td>
+              <td>${formatMoney(c.revenue)}</td>
+              <td>${Number(j.miles || 0).toFixed(1)}</td>
+              <td>${formatMoney(c.gas)}</td>
+              <td>${formatMoney(c.profit)}</td>
+              <td>${statusTag}</td>
+              <td>${paidTag}</td>
+              <td>
+                <button class="btn" data-act="paid" data-id="${j.id}" style="padding:8px 10px;border-radius:12px;">Paid</button>
+                <button class="btn" data-act="status" data-id="${j.id}" style="padding:8px 10px;border-radius:12px;">Status</button>
+                <button class="btn" data-act="del" data-id="${j.id}" style="padding:8px 10px;border-radius:12px;">Del</button>
+              </td>
+            `;
+            jobsTable.appendChild(tr);
+          });
+
+          // Actions
+          jobsTable.querySelectorAll("button[data-act]").forEach((btn) => {
+            const id = btn.getAttribute("data-id");
+            const act = btn.getAttribute("data-act");
+            btn.addEventListener("click", () => {
+              if (act === "del") deleteJob(id);
+              if (act === "paid") togglePaid(id);
+              if (act === "status") toggleStatus(id);
+            });
+          });
+        }
+
+        // Group summary (profit view)
+        renderGroupSummary(filtered);
+      }
+
+      function renderGroupSummary(filteredJobs) {
+        // Aggregate by group
+        const map = new Map();
+        filteredJobs.forEach((j) => {
+          const group = j.group || "None";
+          const c = calcJobComputed(j);
+          if (!map.has(group)) {
+            map.set(group, {
+              group,
+              jobs: 0,
+              bales: 0,
+              revenue: 0,
+              miles: 0,
+              minutes: 0,
+              gas: 0,
+              profit: 0,
+            });
+          }
+          const g = map.get(group);
+          g.jobs += 1;
+          g.bales += Number(j.bales || 0);
+          g.revenue += c.revenue;
+          g.miles += Number(j.miles || 0);
+          g.minutes += Number(j.minutes || 0);
+          g.gas += c.gas;
+          g.profit += c.profit;
+        });
+
+        // Sort by profit desc
+        const groups = [...map.values()].sort((a, b) => b.profit - a.profit);
+
+        groupSummary.innerHTML = "";
+        if (groups.length === 0) {
+          groupSummary.innerHTML = `<div class="muted">No trip groups yet.</div>`;
+          return;
+        }
+
+        groups.forEach((g) => {
+          const profitPerMile = g.miles > 0 ? g.profit / g.miles : 0;
+
+          const card = document.createElement("div");
+          card.className = "group-card";
+          card.innerHTML = `
+            <div class="group-head">
+              <div class="group-name">${escapeHtml(g.group)}</div>
+              <div class="mini">${g.jobs} job(s)</div>
+            </div>
+
+            <div class="group-metrics">
+              <div class="metric"><div class="k">Revenue</div><div class="v">${formatMoney(g.revenue)}</div></div>
+              <div class="metric"><div class="k">Gas</div><div class="v">${formatMoney(g.gas)}</div></div>
+              <div class="metric"><div class="k">Profit</div><div class="v">${formatMoney(g.profit)}</div></div>
+              <div class="metric"><div class="k">Profit / mile</div><div class="v">${formatMoney(profitPerMile)}</div></div>
+              <div class="metric"><div class="k">Miles</div><div class="v">${g.miles.toFixed(1)}</div></div>
+              <div class="metric"><div class="k">Minutes</div><div class="v">${Math.round(g.minutes)}</div></div>
+            </div>
+          `;
+          groupSummary.appendChild(card);
+        });
+      }
+
+      /***********************
+       * Capacity
+       ***********************/
+      function renderCapacity() {
+        const today = isoDate(new Date());
+        const todayPlanned = jobs.filter((j) => j.date === today && j.status === "planned");
+        const bales = todayPlanned.reduce((s, j) => s + Number(j.bales || 0), 0);
+
+        const cap = Number(settings.maxBales || 0);
+        plannedLoad.value = `${bales} / ${cap}`;
+
+        const pct = cap > 0 ? Math.min(100, (bales / cap) * 100) : 0;
+        capFill.style.width = pct + "%";
+
+        if (cap <= 0) capHint.textContent = "Set max bales to see capacity.";
+        else if (pct < 60) capHint.textContent = "Plenty of room.";
+        else if (pct < 90) capHint.textContent = "Getting close to full.";
+        else capHint.textContent = "Almost full — consider splitting loads.";
+      }
+
+      /***********************
+       * Filter Helpers
+       ***********************/
+      function filterJobs(allJobs, filter) {
+        if (filter === "all") return [...allJobs];
+
+        const now = new Date();
+        if (filter === "today") {
+          const today = isoDate(now);
+          return allJobs.filter((j) => j.date === today);
+        }
+        if (filter === "week") {
+          const start = startOfWeek(now); // Sunday
+          const end = new Date(start);
+          end.setDate(end.getDate() + 7);
+
+          return allJobs.filter((j) => {
+            const d = new Date(j.date + "T00:00:00");
+            return d >= start && d < end;
+          });
+        }
+
+        return [...allJobs];
+      }
+
+      function startOfWeek(d) {
+        const dt = new Date(d);
+        dt.setHours(0, 0, 0, 0);
+        const day = dt.getDay(); // 0 Sun
+        dt.setDate(dt.getDate() - day);
+        return dt;
+      }
+
+      /***********************
+       * CSV Export
+       ***********************/
+      function exportCSV() {
+        const rows = [
+          [
+            "id",
+            "date",
+            "destination",
+            "customer",
+            "group",
+            "pickup_delivery",
+            "hay_type",
+            "bales",
+            "price_per_bale",
+            "revenue",
+            "miles",
+            "minutes",
+            "gas_price",
+            "mpg",
+            "gas_cost",
+            "profit",
+            "status",
+            "paid",
+            "notes",
+          ],
+        ];
+
+        jobs.forEach((j) => {
+          const c = calcJobComputed(j);
+          rows.push([
+            j.id,
+            j.date,
+            j.dest,
+            j.customer || "",
+            j.group || "None",
+            j.type || "",
+            j.hay || "",
+            j.bales,
+            j.pricePer,
+            c.revenue.toFixed(2),
+            Number(j.miles || 0).toFixed(1),
+            Number(j.minutes || 0).toFixed(0),
+            Number(settings.gasPrice || 0).toFixed(2),
+            Number(settings.mpg || 0).toFixed(1),
+            c.gas.toFixed(2),
+            c.profit.toFixed(2),
+            j.status,
+            j.paid,
+            (j.notes || "").replace(/\n/g, " "),
+          ]);
+        });
+
+        const csv = rows
+          .map((r) => r.map(csvCell).join(","))
+          .join("\n");
+
+        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+        const url = URL.createObjectURL(blob);
+
+        const a = document.createElement("a");
+        a.href = url;
+        a.download = `crown-range-hay-logger-${isoDate(new Date())}.csv`;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
+        URL.revokeObjectURL(url);
+      }
+
+      function csvCell(v) {
+        const s = String(v ?? "");
+        // quote if needed
+        if (/[,"\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
+        return s;
+      }
+
+      /***********************
+       * Storage
+       ***********************/
+      function loadSettings() {
+        try {
+          const raw = localStorage.getItem(LS_SETTINGS);
+          if (!raw) return structuredClone(DEFAULT_SETTINGS);
+          const parsed = JSON.parse(raw);
+
+          // Merge defaults for forward-compat
+          const merged = structuredClone(DEFAULT_SETTINGS);
+          Object.assign(merged, parsed);
+
+          // Ensure groups
+          if (!Array.isArray(merged.groups) || merged.groups.length === 0) merged.groups = ["None"];
+          if (!merged.groups.includes("None")) merged.groups.unshift("None");
+
+          // Ensure destinations
+          if (!Array.isArray(merged.destinations) || merged.destinations.length === 0) {
+            merged.destinations = structuredClone(DEFAULT_SETTINGS.destinations);
+          }
+
+          return merged;
+        } catch {
+          return structuredClone(DEFAULT_SETTINGS);
+        }
+      }
+
+      function saveSettings(s) {
+        localStorage.setItem(LS_SETTINGS, JSON.stringify(s));
+      }
+
+      function loadJobs() {
+        try {
+          const raw = localStorage.getItem(LS_JOBS);
+          if (!raw) return [];
+          const parsed = JSON.parse(raw);
+          return Array.isArray(parsed) ? parsed : [];
+        } catch {
+          return [];
+        }
+      }
+
+      function saveJobs(j) {
+        localStorage.setItem(LS_JOBS, JSON.stringify(j));
+      }
+
+      function clearAllData() {
+        if (!confirm("This will delete ALL jobs and reset settings. Continue?")) return;
+        localStorage.removeItem(LS_JOBS);
+        localStorage.removeItem(LS_SETTINGS);
+        settings = structuredClone(DEFAULT_SETTINGS);
+        jobs = [];
+
+        // re-init UI
+        setGasPrice.value = settings.gasPrice.toFixed(2);
+        setMpg.value = settings.mpg.toFixed(1);
+        maxBales.value = settings.maxBales;
+
+        buildDestDropdown();
+        buildGroupDropdown();
+        buildDestEditor();
+        buildGroupManagerList();
+
+        jobDate.value = isoDate(new Date());
+        jobCustomer.value = "";
+        jobNotes.value = "";
+        jobBales.value = 20;
+        jobPricePer.value = 16.0;
+        jobPaid.value = "no";
+        jobStatus.value = "planned";
+        jobGroup.value = "None";
+        jobDest.value = settings.destinations[0].name;
+
+        applyDestPreset();
+        autoPickupDelivery();
+        recomputeJobTotal();
+        renderAll();
+      }
+
+      /***********************
+       * Utils
+       ***********************/
+      function formatMoney(n) {
+        const val = Number(n || 0);
+        return val.toLocaleString(undefined, {
+          style: "currency",
+          currency: "USD",
+          minimumFractionDigits: 2,
+        });
+      }
+
+      function isoDate(d) {
+        const dt = new Date(d);
+        const y = dt.getFullYear();
+        const m = String(dt.getMonth() + 1).padStart(2, "0");
+        const day = String(dt.getDate()).padStart(2, "0");
+        return `${y}-${m}-${day}`;
+      }
+
+      function escapeHtml(str) {
+        return String(str ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function cryptoRandomId() {
+        // short id
+        const arr = new Uint8Array(8);
+        crypto.getRandomValues(arr);
+        return [...arr].map((b) => b.toString(16).padStart(2, "0")).join("");
+      }
+    </script>
+  </body>
+</html>
