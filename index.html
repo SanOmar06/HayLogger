@@ -7,6 +7,7 @@
     <link rel="manifest" href="manifest.json" />
     <meta name="theme-color" content="#020617" />
 
+
     <script>
       if ("serviceWorker" in navigator) {
         window.addEventListener("load", () => {
@@ -14,8 +15,9 @@
         });
       }
     </script>
+  
 
-    <style>
+
     <style>
       * {
         box-sizing: border-box;
@@ -84,10 +86,27 @@
         gap: 12px;
       }
 
+      /* ✅ Logo */
+      .brand {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        min-width: 0;
+      }
+      .brand img {
+        height: 34px; /* adjust if you want */
+        width: auto;
+        display: block;
+        border-radius: 10px; /* makes it look clean even if png edges */
+      }
+
       h1 {
         font-size: 28px;
         margin: 0;
         letter-spacing: -0.02em;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
       }
 
       .badge {
@@ -478,13 +497,18 @@
   <body>
     <div class="topbar">
       <div class="topbar-row">
-        <div>
-          <h1>Crown Range – Hay Logger</h1>
-          <div class="badge">
-            <span class="dot"></span>
-            <span>Owner demo · Local only</span>
+        <div class="brand">
+          <!-- ✅ Add your logo file here: assets/logo.png -->
+          <img src="assets/logo.png" alt="SFS Logo" />
+          <div>
+            <h1>Crown Range – Hay Logger</h1>
+            <div class="badge">
+              <span class="dot"></span>
+              <span>Owner demo · Local only</span>
+            </div>
           </div>
         </div>
+
         <button class="btn" id="exportBtn">Export CSV</button>
       </div>
     </div>
@@ -1007,13 +1031,11 @@
       function applyDestPreset() {
         const preset = getDestPreset(jobDest.value);
         if (!preset) return;
-        // Only override if user hasn't typed something nonzero? We'll always fill on destination change.
         jobMiles.value = Number(preset.miles || 0);
         jobMinutes.value = Number(preset.minutes || 0);
       }
 
       function autoPickupDelivery() {
-        // per your request: choosing a location other than Norco should default to Delivery
         const dest = jobDest.value;
         if (dest && dest.toLowerCase() !== "norco") jobType.value = "delivery";
         else jobType.value = "pickup";
@@ -1062,7 +1084,6 @@
           );
         });
 
-        // Add new destination
         const addWrap = document.createElement("div");
         addWrap.className = "row";
         addWrap.innerHTML = `
@@ -1109,9 +1130,6 @@
 
         if (!confirm(`Delete destination "${d.name}"?`)) return;
         settings.destinations.splice(idx, 1);
-
-        // If any jobs reference the deleted destination, keep them as-is (string),
-        // but dropdown won't show it; that's okay. You can edit later if needed.
 
         saveSettings(settings);
         buildDestDropdown();
@@ -1191,7 +1209,6 @@
         if (name === "None") return alert('You cannot delete the "None" group.');
         if (!confirm(`Delete group "${name}"? Jobs in that group will be moved to "None".`)) return;
 
-        // Move jobs to None
         jobs = jobs.map((j) => (j.group === name ? { ...j, group: "None" } : j));
 
         settings.groups = settings.groups.filter((g) => g !== name);
@@ -1282,10 +1299,8 @@
         jobs.unshift(job);
         saveJobs(jobs);
 
-        // Reset minimal fields (keep pricing defaults, etc.)
         jobCustomer.value = "";
         jobNotes.value = "";
-        // Keep dest/group/bales/price for speed
 
         renderAll();
         showView("overview");
@@ -1339,7 +1354,6 @@
       function renderOverview() {
         const filtered = filterJobs(jobs, activeFilter);
 
-        // Totals
         let revenueSum = 0;
         let milesSum = 0;
         let gasSum = 0;
@@ -1367,7 +1381,6 @@
         tagPlanned.textContent = `${plannedCount} planned`;
         tagUnpaid.textContent = `${unpaidCount} unpaid`;
 
-        // Table
         jobsTable.innerHTML = "";
         if (filtered.length === 0) {
           const tr = document.createElement("tr");
@@ -1409,7 +1422,6 @@
             jobsTable.appendChild(tr);
           });
 
-          // Actions
           jobsTable.querySelectorAll("button[data-act]").forEach((btn) => {
             const id = btn.getAttribute("data-id");
             const act = btn.getAttribute("data-act");
@@ -1421,12 +1433,10 @@
           });
         }
 
-        // Group summary (profit view)
         renderGroupSummary(filtered);
       }
 
       function renderGroupSummary(filteredJobs) {
-        // Aggregate by group
         const map = new Map();
         filteredJobs.forEach((j) => {
           const group = j.group || "None";
@@ -1453,7 +1463,6 @@
           g.profit += c.profit;
         });
 
-        // Sort by profit desc
         const groups = [...map.values()].sort((a, b) => b.profit - a.profit);
 
         groupSummary.innerHTML = "";
@@ -1518,7 +1527,7 @@
           return allJobs.filter((j) => j.date === today);
         }
         if (filter === "week") {
-          const start = startOfWeek(now); // Sunday
+          const start = startOfWeek(now);
           const end = new Date(start);
           end.setDate(end.getDate() + 7);
 
@@ -1534,7 +1543,7 @@
       function startOfWeek(d) {
         const dt = new Date(d);
         dt.setHours(0, 0, 0, 0);
-        const day = dt.getDay(); // 0 Sun
+        const day = dt.getDay();
         dt.setDate(dt.getDate() - day);
         return dt;
       }
@@ -1592,9 +1601,7 @@
           ]);
         });
 
-        const csv = rows
-          .map((r) => r.map(csvCell).join(","))
-          .join("\n");
+        const csv = rows.map((r) => r.map(csvCell).join(",")).join("\n");
 
         const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
         const url = URL.createObjectURL(blob);
@@ -1610,7 +1617,6 @@
 
       function csvCell(v) {
         const s = String(v ?? "");
-        // quote if needed
         if (/[,"\n]/.test(s)) return `"${s.replace(/"/g, '""')}"`;
         return s;
       }
@@ -1624,15 +1630,12 @@
           if (!raw) return structuredClone(DEFAULT_SETTINGS);
           const parsed = JSON.parse(raw);
 
-          // Merge defaults for forward-compat
           const merged = structuredClone(DEFAULT_SETTINGS);
           Object.assign(merged, parsed);
 
-          // Ensure groups
           if (!Array.isArray(merged.groups) || merged.groups.length === 0) merged.groups = ["None"];
           if (!merged.groups.includes("None")) merged.groups.unshift("None");
 
-          // Ensure destinations
           if (!Array.isArray(merged.destinations) || merged.destinations.length === 0) {
             merged.destinations = structuredClone(DEFAULT_SETTINGS.destinations);
           }
@@ -1669,7 +1672,6 @@
         settings = structuredClone(DEFAULT_SETTINGS);
         jobs = [];
 
-        // re-init UI
         setGasPrice.value = settings.gasPrice.toFixed(2);
         setMpg.value = settings.mpg.toFixed(1);
         maxBales.value = settings.maxBales;
@@ -1725,7 +1727,6 @@
       }
 
       function cryptoRandomId() {
-        // short id
         const arr = new Uint8Array(8);
         crypto.getRandomValues(arr);
         return [...arr].map((b) => b.toString(16).padStart(2, "0")).join("");
